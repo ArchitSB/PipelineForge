@@ -33,10 +33,10 @@ export default function CursorGlow() {
       }
     };
 
-    /* ── Resize handler ───────────────────────── */
+    /* ── Resize: fit the canvas to its CSS size ─ */
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
       buildGrid();
       draw();
     };
@@ -74,7 +74,6 @@ export default function CursorGlow() {
           ctx.fillStyle = `rgba(${r},${g},${b},1)`;
           ctx.fill();
         } else {
-          // Plain base dot — draw only those not in proximity to save calls
           ctx.beginPath();
           ctx.arc(dot.x, dot.y, BASE_RADIUS, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(${FAR_R},${FAR_G},${FAR_B},1)`;
@@ -83,15 +82,15 @@ export default function CursorGlow() {
       });
     };
 
-    /* ── Mouse move with rAF throttle ─────────── */
+    // Convert viewport mouse coords to canvas-local coords
     const handleMouseMove = (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
       cancelAnimationFrame(animFrame);
       animFrame = requestAnimationFrame(draw);
     };
 
-    /* ── Mouse leaves window ──────────────────── */
     const handleMouseLeave = () => {
       mouseX = -999;
       mouseY = -999;
@@ -99,16 +98,17 @@ export default function CursorGlow() {
       animFrame = requestAnimationFrame(draw);
     };
 
-    /* ── Bootstrap ────────────────────────────── */
+    // ResizeObserver watches the canvas element itself for layout changes
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+
     resize();
-    window.addEventListener('resize', resize);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseleave', handleMouseLeave);
 
-    /* ── Cleanup ──────────────────────────────── */
     return () => {
       cancelAnimationFrame(animFrame);
-      window.removeEventListener('resize', resize);
+      ro.disconnect();
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
     };
@@ -118,13 +118,13 @@ export default function CursorGlow() {
     <canvas
       ref={canvasRef}
       style={{
-        position: 'fixed',
+        position: 'absolute',
         top: 0,
         left: 0,
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '100%',
         pointerEvents: 'none',
-        zIndex: 1,
+        zIndex: 0,
       }}
     />
   );

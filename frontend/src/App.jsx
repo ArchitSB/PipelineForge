@@ -2,13 +2,11 @@ import { useCallback, useRef, useState } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
-  Background,
   Controls,
   MiniMap,
   addEdge,
   useEdgesState,
   useNodesState,
-  BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -160,8 +158,6 @@ function PipelineEditor() {
 
   return (
     <div className="pf-app">
-      {/* Cursor proximity dot-grid overlay — pointerEvents:none so ReactFlow is unaffected */}
-      <CursorGlow />
       <TopBar
         nodeCount={nodes.length}
         edgeCount={edges.length}
@@ -176,6 +172,8 @@ function PipelineEditor() {
           ref={reactFlowWrapper}
           className="pf-canvas"
         >
+          {/* Dot-grid glow — absolute, behind ReactFlow by DOM order */}
+          <CursorGlow />
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -197,13 +195,6 @@ function PipelineEditor() {
             snapToGrid={true}
             snapGrid={[8, 8]}
           >
-            <Background
-              variant={BackgroundVariant.Dots}
-              gap={24}
-              size={1}
-              color="#1e1e1e"
-              style={{ backgroundColor: '#0d0d0d' }}
-            />
             <Controls position="bottom-left" />
             <MiniMap
               position="bottom-right"
