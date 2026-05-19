@@ -52,16 +52,8 @@
   transform: scale(0.97);
 }
 
-/* React Flow edge overrides for animation */
-.react-flow__edge.animated .react-flow__edge-path {
-  stroke: var(--color-accent-green) !important;
-  stroke-dasharray: 8 4;
-  animation: wireFlow 0.4s linear infinite;
-}
-
-@keyframes wireFlow {
-  to { stroke-dashoffset: -12; }
-}
+/* Edge cursor */
+.react-flow__edge path { cursor: pointer; }
 
 /* Empty state hint */
 .pf-empty-hint {

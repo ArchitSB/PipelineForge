@@ -26,6 +26,8 @@ import APINode from './nodes/APINode';
 import NoteNode from './nodes/NoteNode';
 import ConditionalNode from './nodes/ConditionalNode';
 
+import CursorGlow from './components/CursorGlow';
+import AnimatedEdge from './edges/AnimatedEdge';
 import './styles/App.css';
 
 // Register custom node types
@@ -39,6 +41,12 @@ const nodeTypes = {
   api: APINode,
   note: NoteNode,
   conditional: ConditionalNode,
+};
+
+// Register custom edge types
+const edgeTypes = {
+  default: AnimatedEdge,
+  animated: AnimatedEdge,
 };
 
 // Default nodes matching the Stitch design
@@ -70,9 +78,9 @@ const defaultNodes = [
 ];
 
 const defaultEdges = [
-  { id: 'e1-2', source: '1', target: '2', sourceHandle: 'output', targetHandle: 'input', animated: false },
-  { id: 'e2-3', source: '2', target: '3', sourceHandle: 'output', targetHandle: 'input', animated: false },
-  { id: 'e3-4', source: '3', target: '4', sourceHandle: 'output', targetHandle: 'input', animated: false },
+  { id: 'e1-2', type: 'animated', source: '1', target: '2', sourceHandle: 'output', targetHandle: 'input' },
+  { id: 'e2-3', type: 'animated', source: '2', target: '3', sourceHandle: 'output', targetHandle: 'input' },
+  { id: 'e3-4', type: 'animated', source: '3', target: '4', sourceHandle: 'output', targetHandle: 'input' },
 ];
 
 let nodeIdCounter = 10;
@@ -99,9 +107,15 @@ function PipelineEditor() {
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
 
-  // Connect two nodes
+  // Connect two nodes — always use the animated edge type
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge({ ...params, animated: false }, eds)),
+    (params) =>
+      setEdges((eds) =>
+        addEdge(
+          { ...params, type: 'animated', id: `edge-${Date.now()}` },
+          eds
+        )
+      ),
     [setEdges]
   );
 
@@ -138,18 +152,16 @@ function PipelineEditor() {
   const handleRunPipeline = () => {
     setIsRunning(true);
     setShowAnalysis(true);
-    // Animate active edges
-    setEdges((eds) =>
-      eds.map((e) => ({ ...e, animated: true }))
-    );
+    // AnimatedEdge already flows continuously — just reset isRunning after delay
     setTimeout(() => {
       setIsRunning(false);
-      setEdges((eds) => eds.map((e) => ({ ...e, animated: false })));
     }, 2200);
   };
 
   return (
     <div className="pf-app">
+      {/* Cursor proximity dot-grid overlay — pointerEvents:none so ReactFlow is unaffected */}
+      <CursorGlow />
       <TopBar
         nodeCount={nodes.length}
         edgeCount={edges.length}
@@ -174,6 +186,8 @@ function PipelineEditor() {
             onDrop={onDrop}
             onDragOver={onDragOver}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            defaultEdgeOptions={{ type: 'animated' }}
             fitView
             fitViewOptions={{ padding: 0.2 }}
             minZoom={0.2}
