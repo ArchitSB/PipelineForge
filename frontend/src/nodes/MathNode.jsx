@@ -1,7 +1,17 @@
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, useReactFlow } from '@xyflow/react';
 import BaseNode from './BaseNode';
 
-export default function MathNode({ data, selected }) {
+const stopKeys = (e) => e.stopPropagation();
+
+export default function MathNode({ id, data, selected }) {
+  const { setNodes } = useReactFlow();
+
+  const update = (key) => (e) => {
+    setNodes((nds) =>
+      nds.map((n) => n.id === id ? { ...n, data: { ...n.data, [key]: e.target.value } } : n)
+    );
+  };
+
   return (
     <BaseNode
       title={data.label || 'Math'}
@@ -11,7 +21,14 @@ export default function MathNode({ data, selected }) {
     >
       <div className="pf-field">
         <label>Expression</label>
-        <div className="pf-code-preview">{data.expression || 'a + b * 2'}</div>
+        <input
+          className="nodrag"
+          type="text"
+          value={data.expression || ''}
+          placeholder="a + b * 2"
+          onChange={update('expression')}
+          onKeyDown={stopKeys}
+        />
       </div>
       <Handle type="target" position={Position.Left} id="a" style={{ top: '35%' }} />
       <Handle type="target" position={Position.Left} id="b" style={{ top: '65%' }} />

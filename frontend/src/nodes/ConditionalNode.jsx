@@ -1,7 +1,17 @@
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, useReactFlow } from '@xyflow/react';
 import BaseNode from './BaseNode';
 
-export default function ConditionalNode({ data, selected }) {
+const stopKeys = (e) => e.stopPropagation();
+
+export default function ConditionalNode({ id, data, selected }) {
+  const { setNodes } = useReactFlow();
+
+  const update = (key) => (e) => {
+    setNodes((nds) =>
+      nds.map((n) => n.id === id ? { ...n, data: { ...n.data, [key]: e.target.value } } : n)
+    );
+  };
+
   return (
     <BaseNode
       title={data.label || 'Conditional'}
@@ -11,9 +21,14 @@ export default function ConditionalNode({ data, selected }) {
     >
       <div className="pf-field">
         <label>Branch on</label>
-        <div className="pf-field-value">
-          <span>{data.field || 'status'}</span>
-        </div>
+        <input
+          className="nodrag"
+          type="text"
+          value={data.field || ''}
+          placeholder="status"
+          onChange={update('field')}
+          onKeyDown={stopKeys}
+        />
       </div>
       <Handle type="target" position={Position.Left} id="input" />
       <Handle

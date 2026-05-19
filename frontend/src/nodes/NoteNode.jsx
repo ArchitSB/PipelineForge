@@ -1,7 +1,17 @@
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, useReactFlow } from '@xyflow/react';
 import BaseNode from './BaseNode';
 
-export default function NoteNode({ data, selected }) {
+const stopKeys = (e) => e.stopPropagation();
+
+export default function NoteNode({ id, data, selected }) {
+  const { setNodes } = useReactFlow();
+
+  const update = (key) => (e) => {
+    setNodes((nds) =>
+      nds.map((n) => n.id === id ? { ...n, data: { ...n.data, [key]: e.target.value } } : n)
+    );
+  };
+
   return (
     <BaseNode
       title={data.label || 'Note'}
@@ -9,9 +19,15 @@ export default function NoteNode({ data, selected }) {
       accentColor="#6b6b6b"
       selected={selected}
     >
-      <p className="pf-description" style={{ fontStyle: 'italic' }}>
-        {data.text || 'Add a note here...'}
-      </p>
+      <textarea
+        className="nodrag pf-field-textarea"
+        value={data.text || ''}
+        placeholder="Add a note here..."
+        onChange={update('text')}
+        onKeyDown={stopKeys}
+        rows={3}
+        style={{ fontStyle: 'italic' }}
+      />
     </BaseNode>
   );
 }

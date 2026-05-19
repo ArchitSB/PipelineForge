@@ -1,7 +1,17 @@
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, useReactFlow } from '@xyflow/react';
 import BaseNode from './BaseNode';
 
-export default function TextNode({ data, selected }) {
+const stopKeys = (e) => e.stopPropagation();
+
+export default function TextNode({ id, data, selected }) {
+  const { setNodes } = useReactFlow();
+
+  const update = (key) => (e) => {
+    setNodes((nds) =>
+      nds.map((n) => n.id === id ? { ...n, data: { ...n.data, [key]: e.target.value } } : n)
+    );
+  };
+
   return (
     <BaseNode
       title={data.label || 'Prompt Template'}
@@ -9,8 +19,16 @@ export default function TextNode({ data, selected }) {
       accentColor="var(--color-accent-amber)"
       selected={selected}
     >
-      <div className="pf-code-preview">
-        {data.template || '"Analyze: {{input}}"'}
+      <div className="pf-field">
+        <label>Template</label>
+        <textarea
+          className="nodrag pf-field-textarea"
+          value={data.template || ''}
+          placeholder='"Analyze: {{input}}"'
+          onChange={update('template')}
+          onKeyDown={stopKeys}
+          rows={3}
+        />
       </div>
       <Handle type="target" position={Position.Left} id="input" />
       <Handle

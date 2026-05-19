@@ -1,7 +1,18 @@
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, useReactFlow } from '@xyflow/react';
 import BaseNode from './BaseNode';
 
-export default function APINode({ data, selected }) {
+const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
+const stopKeys = (e) => e.stopPropagation();
+
+export default function APINode({ id, data, selected }) {
+  const { setNodes } = useReactFlow();
+
+  const update = (key) => (e) => {
+    setNodes((nds) =>
+      nds.map((n) => n.id === id ? { ...n, data: { ...n.data, [key]: e.target.value } } : n)
+    );
+  };
+
   return (
     <BaseNode
       title={data.label || 'API Call'}
@@ -11,15 +22,26 @@ export default function APINode({ data, selected }) {
     >
       <div className="pf-field">
         <label>Method</label>
-        <div className="pf-field-value">
-          <span style={{ color: 'var(--color-accent-cyan)', fontWeight: 600 }}>
-            {data.method || 'GET'}
-          </span>
-        </div>
+        <select
+          className="nodrag"
+          value={data.method || 'GET'}
+          onChange={update('method')}
+          onKeyDown={stopKeys}
+          style={{ color: 'var(--color-accent-cyan)', fontWeight: 600 }}
+        >
+          {METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
       </div>
       <div className="pf-field">
         <label>Endpoint</label>
-        <div className="pf-code-preview">{data.endpoint || '/api/v1/...'}</div>
+        <input
+          className="nodrag"
+          type="text"
+          value={data.endpoint || ''}
+          placeholder="/api/v1/endpoint"
+          onChange={update('endpoint')}
+          onKeyDown={stopKeys}
+        />
       </div>
       <Handle type="target" position={Position.Left} id="input" />
       <Handle

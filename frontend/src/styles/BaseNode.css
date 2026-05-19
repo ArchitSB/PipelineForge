@@ -110,6 +110,35 @@
   line-height: 16px;
 }
 
+/* Editable form controls inside nodes */
+.pf-field input,
+.pf-field select {
+  background: #1f1f1f;
+  border: 1px solid var(--color-node-border);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-on-surface);
+  width: 100%;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.pf-field input:focus,
+.pf-field select:focus {
+  border-color: var(--color-accent-blue);
+}
+
+.pf-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238f8fa0'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+}
+
 .pf-code-preview {
   background: #1f1f1f;
   border: 1px solid var(--color-node-border);

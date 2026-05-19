@@ -1,9 +1,19 @@
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, useReactFlow } from '@xyflow/react';
 import BaseNode from './BaseNode';
 
 const MODELS = ['gpt-4-turbo', 'gpt-4o', 'claude-3.5-sonnet', 'gemini-1.5-pro'];
 
-export default function LLMNode({ data, selected }) {
+const stopKeys = (e) => e.stopPropagation();
+
+export default function LLMNode({ id, data, selected }) {
+  const { setNodes } = useReactFlow();
+
+  const update = (key) => (e) => {
+    setNodes((nds) =>
+      nds.map((n) => n.id === id ? { ...n, data: { ...n.data, [key]: e.target.value } } : n)
+    );
+  };
+
   return (
     <BaseNode
       title={data.label || 'LLM Processor'}
@@ -13,18 +23,24 @@ export default function LLMNode({ data, selected }) {
     >
       <div className="pf-field">
         <label>Model</label>
-        <div className="pf-field-value">
-          <span>{data.model || 'gpt-4-turbo'}</span>
-          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
-            arrow_drop_down
-          </span>
-        </div>
+        <select
+          className="nodrag"
+          value={data.model || 'gpt-4-turbo'}
+          onChange={update('model')}
+          onKeyDown={stopKeys}
+        >
+          {MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
       </div>
       <div className="pf-field">
         <label>Temperature</label>
-        <div className="pf-field-value">
-          <span>{data.temperature ?? '0.7'}</span>
-        </div>
+        <input
+          className="nodrag"
+          type="text"
+          value={data.temperature ?? '0.7'}
+          onChange={update('temperature')}
+          onKeyDown={stopKeys}
+        />
       </div>
       <Handle type="target" position={Position.Left} id="input" />
       <Handle
