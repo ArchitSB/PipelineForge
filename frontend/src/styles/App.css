@@ -1,0 +1,75 @@
+.pf-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.pf-workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.pf-canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Floating action button */
+.pf-fab {
+  position: absolute;
+  bottom: var(--sp-lg);
+  right: var(--sp-lg);
+  height: 44px;
+  padding: 0 var(--sp-md);
+  background: var(--color-primary-container);
+  color: #f0f0f0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: var(--radius-node);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  z-index: 40;
+  transition: opacity 0.15s, transform 0.1s;
+  box-shadow: 0 4px 16px rgba(88, 101, 242, 0.35);
+}
+
+.pf-fab:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(88, 101, 242, 0.5);
+}
+
+.pf-fab:active {
+  transform: scale(0.97);
+}
+
+/* React Flow edge overrides for animation */
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke: var(--color-accent-green) !important;
+  stroke-dasharray: 8 4;
+  animation: wireFlow 0.4s linear infinite;
+}
+
+@keyframes wireFlow {
+  to { stroke-dashoffset: -12; }
+}
+
+/* Empty state hint */
+.pf-empty-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  color: var(--color-outline);
+}

@@ -1,0 +1,124 @@
+.pf-node {
+  position: relative;
+  width: 240px;
+  background: var(--color-node-bg);
+  border: 1px solid var(--color-node-border);
+  border-radius: var(--radius-node);
+  transition: border-color 0.15s ease;
+  overflow: visible;
+}
+
+.pf-node:hover {
+  border-color: var(--color-node-border-hover);
+}
+
+.pf-node--selected {
+  border-color: var(--color-accent-blue) !important;
+  box-shadow: 0 0 0 1px var(--color-accent-blue);
+}
+
+.pf-node__accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--radius-node) 0 0 var(--radius-node);
+  z-index: 1;
+}
+
+.pf-node__body {
+  padding: var(--sp-node);
+  padding-left: 15px;
+}
+
+.pf-node__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-sm);
+}
+
+.pf-node__title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+}
+
+.pf-node__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pf-node__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+}
+
+/* Field components inside nodes */
+.pf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pf-field label {
+  color: var(--color-on-surface-variant);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pf-field-value {
+  background: #1f1f1f;
+  border: 1px solid var(--color-node-border);
+  border-radius: var(--radius-sm);
+  padding: 3px var(--sp-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-on-surface);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.pf-field-value:hover {
+  border-color: var(--color-node-border-hover);
+}
+
+.pf-field-textarea {
+  background: #1f1f1f;
+  border: 1px solid var(--color-node-border);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-xs) var(--sp-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-on-surface-variant);
+  resize: none;
+  min-height: 48px;
+  width: 100%;
+}
+
+.pf-description {
+  font-size: 12px;
+  color: var(--color-on-surface-variant);
+  line-height: 16px;
+}
+
+.pf-code-preview {
+  background: #1f1f1f;
+  border: 1px solid var(--color-node-border);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-xs) var(--sp-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
