@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react';
 
-const PROXIMITY_RADIUS = 130;
-const GLOW_RADIUS = 50;
-const DOT_SPACING = 24;
-const BASE_RADIUS = 1;
-const MAX_RADIUS = 4;
+const PROXIMITY = 130;
+const GLOW_R = 50;
+const SPACING = 24;
+const BASE_R = 1;
+const MAX_R = 4;
 
-// Base color rgb(30, 30, 30)  →  accent rgb(88, 101, 242)
-const FAR_R = 30, FAR_G = 30, FAR_B = 30;
-const CLOSE_R = 88, CLOSE_G = 101, CLOSE_B = 242;
+// base color → accent blue
+const [FR, FG, FB] = [30, 30, 30];
+const [CR, CG, CB] = [88, 101, 242];
 
 export default function CursorGlow() {
   const canvasRef = useRef(null);
@@ -18,99 +18,84 @@ export default function CursorGlow() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    let mouseX = -999;
-    let mouseY = -999;
-    let animFrame;
+    let mx = -999, my = -999;
+    let raf;
     let dots = [];
 
-    /* ── Build dot grid ───────────────────────── */
-    const buildGrid = () => {
+    function buildGrid() {
       dots = [];
-      for (let x = 0; x < canvas.width; x += DOT_SPACING) {
-        for (let y = 0; y < canvas.height; y += DOT_SPACING) {
+      for (let x = 0; x < canvas.width; x += SPACING)
+        for (let y = 0; y < canvas.height; y += SPACING)
           dots.push({ x, y });
-        }
-      }
-    };
+    }
 
-    /* ── Resize: fit the canvas to its CSS size ─ */
-    const resize = () => {
+    function resize() {
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
       buildGrid();
       draw();
-    };
+    }
 
-    /* ── Draw all dots ────────────────────────── */
-    const draw = () => {
+    function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      dots.forEach((dot) => {
-        const dx = dot.x - mouseX;
-        const dy = dot.y - mouseY;
+      dots.forEach(({ x, y }) => {
+        const dx = x - mx, dy = y - my;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist < PROXIMITY_RADIUS) {
-          const intensity = 1 - dist / PROXIMITY_RADIUS;
+        if (dist < PROXIMITY) {
+          const t = 1 - dist / PROXIMITY;
+          const r = Math.round(FR + t * (CR - FR));
+          const g = Math.round(FG + t * (CG - FG));
+          const b = Math.round(FB + t * (CB - FB));
+          const rad = BASE_R + t * (MAX_R - BASE_R);
 
-          const r = Math.round(FAR_R + intensity * (CLOSE_R - FAR_R));
-          const g = Math.round(FAR_G + intensity * (CLOSE_G - FAR_G));
-          const b = Math.round(FAR_B + intensity * (CLOSE_B - FAR_B));
-
-          const radius = BASE_RADIUS + intensity * (MAX_RADIUS - BASE_RADIUS);
-
-          // Outer soft glow for very close dots
-          if (dist < GLOW_RADIUS) {
-            const glowIntensity = 1 - dist / GLOW_RADIUS;
+          if (dist < GLOW_R) {
+            const gi = 1 - dist / GLOW_R;
             ctx.beginPath();
-            ctx.arc(dot.x, dot.y, radius * 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${r},${g},${b},${0.15 * glowIntensity})`;
+            ctx.arc(x, y, rad * 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${r},${g},${b},${0.15 * gi})`;
             ctx.fill();
           }
 
-          // Main dot
           ctx.beginPath();
-          ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
+          ctx.arc(x, y, rad, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(${r},${g},${b},1)`;
           ctx.fill();
         } else {
           ctx.beginPath();
-          ctx.arc(dot.x, dot.y, BASE_RADIUS, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${FAR_R},${FAR_G},${FAR_B},1)`;
+          ctx.arc(x, y, BASE_R, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${FR},${FG},${FB},1)`;
           ctx.fill();
         }
       });
-    };
+    }
 
-    // Convert viewport mouse coords to canvas-local coords
-    const handleMouseMove = (e) => {
+    // offset coords to canvas-local space
+    function onMove(e) {
       const rect = canvas.getBoundingClientRect();
-      mouseX = e.clientX - rect.left;
-      mouseY = e.clientY - rect.top;
-      cancelAnimationFrame(animFrame);
-      animFrame = requestAnimationFrame(draw);
-    };
+      mx = e.clientX - rect.left;
+      my = e.clientY - rect.top;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(draw);
+    }
 
-    const handleMouseLeave = () => {
-      mouseX = -999;
-      mouseY = -999;
-      cancelAnimationFrame(animFrame);
-      animFrame = requestAnimationFrame(draw);
-    };
+    function onLeave() {
+      mx = -999; my = -999;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(draw);
+    }
 
-    // ResizeObserver watches the canvas element itself for layout changes
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
-
     resize();
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseleave', onLeave);
 
     return () => {
-      cancelAnimationFrame(animFrame);
+      cancelAnimationFrame(raf);
       ro.disconnect();
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseleave', onLeave);
     };
   }, []);
 
@@ -119,10 +104,8 @@ export default function CursorGlow() {
       ref={canvasRef}
       style={{
         position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
+        top: 0, left: 0,
+        width: '100%', height: '100%',
         pointerEvents: 'none',
         zIndex: 0,
       }}

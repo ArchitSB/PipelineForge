@@ -13,6 +13,8 @@ import '@xyflow/react/dist/style.css';
 import TopBar from './components/TopBar';
 import NodeLibrary from './components/NodeLibrary';
 import AnalysisPanel from './components/AnalysisPanel';
+import CursorGlow from './components/CursorGlow';
+import AnimatedEdge from './edges/AnimatedEdge';
 
 import InputNode from './nodes/InputNode';
 import OutputNode from './nodes/OutputNode';
@@ -24,11 +26,8 @@ import APINode from './nodes/APINode';
 import NoteNode from './nodes/NoteNode';
 import ConditionalNode from './nodes/ConditionalNode';
 
-import CursorGlow from './components/CursorGlow';
-import AnimatedEdge from './edges/AnimatedEdge';
 import './styles/App.css';
 
-// Register custom node types
 const nodeTypes = {
   input: InputNode,
   output: OutputNode,
@@ -41,38 +40,16 @@ const nodeTypes = {
   conditional: ConditionalNode,
 };
 
-// Register custom edge types
 const edgeTypes = {
   default: AnimatedEdge,
   animated: AnimatedEdge,
 };
 
-// Default nodes matching the Stitch design
 const defaultNodes = [
-  {
-    id: '1',
-    type: 'input',
-    position: { x: 100, y: 160 },
-    data: { label: 'User Input' },
-  },
-  {
-    id: '2',
-    type: 'llm',
-    position: { x: 420, y: 100 },
-    data: { label: 'GPT-4 Processor', model: 'gpt-4-turbo', temperature: '0.7' },
-  },
-  {
-    id: '3',
-    type: 'text',
-    position: { x: 720, y: 280 },
-    data: { label: 'Prompt Template', template: '"Analyze: {{input}}"' },
-  },
-  {
-    id: '4',
-    type: 'output',
-    position: { x: 1020, y: 180 },
-    data: { label: 'Final Response' },
-  },
+  { id: '1', type: 'input',  position: { x: 100, y: 160 }, data: { label: 'User Input' } },
+  { id: '2', type: 'llm',   position: { x: 420, y: 100 }, data: { label: 'GPT-4 Processor', model: 'gpt-4-turbo', temperature: '0.7' } },
+  { id: '3', type: 'text',  position: { x: 720, y: 280 }, data: { label: 'Prompt Template', template: '"Analyze: {{input}}"' } },
+  { id: '4', type: 'output', position: { x: 1020, y: 180 }, data: { label: 'Final Response' } },
 ];
 
 const defaultEdges = [
@@ -81,11 +58,10 @@ const defaultEdges = [
   { id: 'e3-4', type: 'animated', source: '3', target: '4', sourceHandle: 'output', targetHandle: 'input' },
 ];
 
-let nodeIdCounter = 10;
-const getNextId = () => `node_${++nodeIdCounter}`;
+let idCounter = 10;
+const genId = () => `node_${++idCounter}`;
 
-// Default data per node type
-const NODE_DEFAULTS = {
+const nodeDefaults = {
   input:       { label: 'User Input' },
   output:      { label: 'Final Response' },
   llm:         { label: 'LLM Processor', model: 'gpt-4-turbo', temperature: '0.7' },
@@ -98,81 +74,58 @@ const NODE_DEFAULTS = {
 };
 
 function PipelineEditor() {
-  const reactFlowWrapper = useRef(null);
+  const wrapper = useRef(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(defaultNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(defaultEdges);
-  const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const [rfInstance, setRfInstance] = useState(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
 
-  // Connect two nodes — always use the animated edge type
   const onConnect = useCallback(
-    (params) =>
-      setEdges((eds) =>
-        addEdge(
-          { ...params, type: 'animated', id: `edge-${Date.now()}` },
-          eds
-        )
-      ),
+    (params) => setEdges((eds) => addEdge({ ...params, type: 'animated', id: `edge-${Date.now()}` }, eds)),
     [setEdges]
   );
 
-  // Drop from sidebar
-  const onDrop = useCallback(
-    (event) => {
-      event.preventDefault();
-      const type = event.dataTransfer.getData('application/reactflow');
-      if (!type || !reactFlowInstance) return;
+  const onDrop = useCallback((e) => {
+    e.preventDefault();
+    const type = e.dataTransfer.getData('application/reactflow');
+    if (!type || !rfInstance) return;
 
-      const rect = reactFlowWrapper.current.getBoundingClientRect();
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-      });
+    const rect = wrapper.current.getBoundingClientRect();
+    const pos = rfInstance.screenToFlowPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
 
-      const newNode = {
-        id: getNextId(),
-        type,
-        position,
-        data: { ...(NODE_DEFAULTS[type] || { label: type }) },
-      };
+    setNodes((nds) => nds.concat({
+      id: genId(),
+      type,
+      position: pos,
+      data: { ...(nodeDefaults[type] || { label: type }) },
+    }));
+  }, [rfInstance, setNodes]);
 
-      setNodes((nds) => nds.concat(newNode));
-    },
-    [reactFlowInstance, setNodes]
-  );
-
-  const onDragOver = useCallback((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+  const onDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
   }, []);
 
-  const handleRunPipeline = () => {
+  function runPipeline() {
     setIsRunning(true);
     setShowAnalysis(true);
-    // AnimatedEdge already flows continuously — just reset isRunning after delay
-    setTimeout(() => {
-      setIsRunning(false);
-    }, 2200);
-  };
+    setTimeout(() => setIsRunning(false), 2200);
+  }
 
   return (
     <div className="pf-app">
       <TopBar
         nodeCount={nodes.length}
         edgeCount={edges.length}
-        onRunPipeline={handleRunPipeline}
+        onRunPipeline={runPipeline}
         isRunning={isRunning}
       />
 
       <div className="pf-workspace">
         <NodeLibrary />
 
-        <div
-          ref={reactFlowWrapper}
-          className="pf-canvas"
-        >
-          {/* Dot-grid glow — absolute, behind ReactFlow by DOM order */}
+        <div ref={wrapper} className="pf-canvas">
           <CursorGlow />
           <ReactFlow
             nodes={nodes}
@@ -180,7 +133,7 @@ function PipelineEditor() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            onInit={setReactFlowInstance}
+            onInit={setRfInstance}
             onDrop={onDrop}
             onDragOver={onDragOver}
             nodeTypes={nodeTypes}
@@ -205,25 +158,18 @@ function PipelineEditor() {
                 marginBottom: '60px',
                 marginRight: '16px',
               }}
-              nodeColor={(node) => {
-                const COLORS = {
-                  input: '#00bcd4',
-                  output: '#3ecf8e',
-                  llm: '#5865f2',
-                  text: '#ffc107',
-                  filter: '#ba68c8',
-                  math: '#ffc107',
-                  api: '#00bcd4',
-                  note: '#6b6b6b',
-                  conditional: '#ff5252',
+              nodeColor={(n) => {
+                const colors = {
+                  input: '#00bcd4', output: '#3ecf8e', llm: '#5865f2',
+                  text: '#ffc107', filter: '#ba68c8', math: '#ffc107',
+                  api: '#00bcd4', note: '#6b6b6b', conditional: '#ff5252',
                 };
-                return COLORS[node.type] || '#404040';
+                return colors[n.type] || '#404040';
               }}
               maskColor="rgba(13,13,13,0.7)"
             />
           </ReactFlow>
 
-          {/* Floating analysis trigger button */}
           {!showAnalysis && (
             <button
               className="pf-fab animate-fade-in"
@@ -235,13 +181,12 @@ function PipelineEditor() {
             </button>
           )}
 
-          {/* Analysis panel */}
           {showAnalysis && (
             <AnalysisPanel
               nodes={nodes}
               edges={edges}
               onClose={() => setShowAnalysis(false)}
-              onSubmit={handleRunPipeline}
+              onSubmit={runPipeline}
               isRunning={isRunning}
             />
           )}
