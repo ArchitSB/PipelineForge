@@ -2,7 +2,7 @@
 
 A visual AI pipeline builder — drag nodes onto a canvas, wire them together, and submit the graph for analysis. Built as a frontend technical assessment for VectorShift.
 
-![PipelineForge UI](public/pipelineforge.png)
+![PipelineForge UI](./frontend/public/pipelineforge.png)
 
 ---
 
